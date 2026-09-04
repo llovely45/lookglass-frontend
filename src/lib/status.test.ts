@@ -36,21 +36,25 @@ describe("sample color mapping", () => {
     expect(COLOR_DARK_GREEN).toBe("#24aa1d");
   });
 
-  it("uses red for HTTP failure states and neutral gray for missing samples", () => {
+  it("uses red for HTTP failures and neutral gray only for missing samples", () => {
     expect(getSampleColor("http_get", { t: 1, s: "http_error", v: null })).toBe(
-      COLOR_RED,
+      "#e61511",
     );
     expect(getSampleColor("http_get", { t: 1, s: "timeout", v: null })).toBe(
-      COLOR_RED,
+      "#e61511",
     );
     expect(getSampleColor("http_get", { t: 1, s: "error", v: null })).toBe(
-      COLOR_RED,
+      "#e61511",
     );
+    expect(COLOR_NEUTRAL_GRAY).toBe("#d1d5db");
     expect(getSampleColor("http_get", { t: 1, s: "missing", v: null })).toBe(
-      COLOR_NEUTRAL_GRAY,
+      "#d1d5db",
     );
     expect(getSampleColor("tcping", { t: 1, s: "missing", v: null })).toBe(
       COLOR_NEUTRAL_GRAY,
+    );
+    expect(getSampleColor("http_get", { t: 1, s: "ok", v: null })).toBe(
+      "#e61511",
     );
   });
 });

@@ -38,7 +38,8 @@ export function getSampleColor(
   }
 
   if (!isUsableLatency(sample)) {
-    return COLOR_NEUTRAL_GRAY;
+    // Neutral gray is reserved for an explicitly missing sample.
+    return COLOR_RED;
   }
 
   if (kind === "tcping") {
