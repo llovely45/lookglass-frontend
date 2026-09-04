@@ -1,7 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import {
-  AdminApiError,
   saveMonitor,
   type MonitorInput,
   type MonitorRecord,
@@ -70,9 +69,6 @@ function errorMessage(error: unknown): string {
 }
 
 function isUnauthorized(error: unknown): boolean {
-  if (error instanceof AdminApiError) {
-    return error.status === 401;
-  }
   return (
     typeof error === "object" &&
     error !== null &&

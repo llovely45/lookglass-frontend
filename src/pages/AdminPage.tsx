@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
-  AdminApiError,
   deleteMonitor,
   deletePanel,
   listMonitors,
@@ -33,9 +32,6 @@ function errorMessage(error: unknown, fallback: string): string {
 }
 
 function isUnauthorized(error: unknown): boolean {
-  if (error instanceof AdminApiError) {
-    return error.status === 401;
-  }
   if (typeof error === "object" && error !== null && "status" in error) {
     return (error as { status?: unknown }).status === 401;
   }
@@ -77,6 +73,83 @@ function nextSortOrder<T extends { sort_order: number }>(items: readonly T[]): n
   ) + 1;
 }
 
+interface OrderedRecord {
+  id: string;
+  sort_order: number;
+}
+
+interface AppliedOrderUpdate<T extends OrderedRecord> {
+  item: T;
+  originalSortOrder: number;
+}
+
+class OrderPersistenceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "OrderPersistenceError";
+  }
+}
+
+async function persistOrderChange<
+  T extends OrderedRecord,
+  Input,
+>(
+  items: readonly T[],
+  fromIndex: number,
+  toIndex: number,
+  save: (input: Input, id?: string) => Promise<unknown>,
+  inputFromRecord: (item: T, sortOrder: number) => Input,
+): Promise<void> {
+  const moving = items[fromIndex];
+  const target = items[toIndex];
+  if (!moving || !target || fromIndex === toIndex) return;
+
+  const reordered = [...items];
+  reordered.splice(fromIndex, 1);
+  reordered.splice(toIndex, 0, moving);
+  const forcedIds = new Set([moving.id, target.id]);
+  const applied: AppliedOrderUpdate<T>[] = [];
+
+  try {
+    for (const [sortOrder, item] of reordered.entries()) {
+      if (item.sort_order === sortOrder && !forcedIds.has(item.id)) {
+        continue;
+      }
+
+      await save(inputFromRecord(item, sortOrder), item.id);
+      applied.push({ item, originalSortOrder: item.sort_order });
+    }
+  } catch (writeError) {
+    let authenticationError: unknown =
+      isUnauthorized(writeError) ? writeError : undefined;
+    let compensationFailed = false;
+
+    for (const update of applied.reverse()) {
+      try {
+        await save(
+          inputFromRecord(update.item, update.originalSortOrder),
+          update.item.id,
+        );
+      } catch (compensationError) {
+        compensationFailed = true;
+        if (!authenticationError && isUnauthorized(compensationError)) {
+          authenticationError = compensationError;
+        }
+      }
+    }
+
+    if (authenticationError) {
+      throw authenticationError;
+    }
+
+    throw new OrderPersistenceError(
+      compensationFailed
+        ? "Order could not be saved, and the previous order could not be fully restored."
+        : "Order could not be saved; the previous order was restored.",
+    );
+  }
+}
+
 export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
   const handleUnauthenticated = onUnauthenticated ?? noop;
   const [panels, setPanels] = useState<PanelRecord[]>([]);
@@ -89,6 +162,7 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const monitorRequestIdRef = useRef(0);
 
   const handleError = useCallback(
     (caughtError: unknown, fallback: string): void => {
@@ -126,15 +200,26 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
 
   const loadMonitors = useCallback(
     async (panelId: string): Promise<boolean> => {
+      const requestId = monitorRequestIdRef.current + 1;
+      monitorRequestIdRef.current = requestId;
       setIsLoadingMonitors(true);
       try {
-        setMonitors(await listMonitors(panelId));
+        const nextMonitors = await listMonitors(panelId);
+        if (requestId !== monitorRequestIdRef.current) {
+          return false;
+        }
+        setMonitors(nextMonitors);
         return true;
       } catch (caughtError) {
+        if (requestId !== monitorRequestIdRef.current) {
+          return false;
+        }
         handleError(caughtError, "The monitors could not be loaded.");
         return false;
       } finally {
-        setIsLoadingMonitors(false);
+        if (requestId === monitorRequestIdRef.current) {
+          setIsLoadingMonitors(false);
+        }
       }
     },
     [handleError],
@@ -145,6 +230,7 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
   }, [loadPanels]);
 
   useEffect(() => {
+    monitorRequestIdRef.current += 1;
     setMonitorFormMode(null);
     setNotice(null);
     if (!selectedPanelId) {
@@ -152,7 +238,11 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
       setIsLoadingMonitors(false);
       return;
     }
+    setMonitors([]);
     void loadMonitors(selectedPanelId);
+    return () => {
+      monitorRequestIdRef.current += 1;
+    };
   }, [loadMonitors, selectedPanelId]);
 
   const selectedPanel = panels.find((panel) => panel.id === selectedPanelId) ?? null;
@@ -181,15 +271,16 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
   }
 
   async function movePanel(fromIndex: number, toIndex: number): Promise<void> {
-    const current = panels;
-    const moving = current[fromIndex];
-    const target = current[toIndex];
-    if (!moving || !target) return;
-
     setError(null);
+    setNotice(null);
     try {
-      await savePanel(panelInputFromRecord(moving, target.sort_order), moving.id);
-      await savePanel(panelInputFromRecord(target, moving.sort_order), target.id);
+      await persistOrderChange(
+        panels,
+        fromIndex,
+        toIndex,
+        savePanel,
+        panelInputFromRecord,
+      );
       setNotice("Panel order saved. Configuration changes are used on the next minute boundary.");
       await loadPanels();
     } catch (caughtError) {
@@ -198,20 +289,15 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
   }
 
   async function moveMonitor(fromIndex: number, toIndex: number): Promise<void> {
-    const current = monitors;
-    const moving = current[fromIndex];
-    const target = current[toIndex];
-    if (!moving || !target) return;
-
     setError(null);
+    setNotice(null);
     try {
-      await saveMonitor(
-        monitorInputFromRecord(moving, target.sort_order),
-        moving.id,
-      );
-      await saveMonitor(
-        monitorInputFromRecord(target, moving.sort_order),
-        target.id,
+      await persistOrderChange(
+        monitors,
+        fromIndex,
+        toIndex,
+        saveMonitor,
+        monitorInputFromRecord,
       );
       setNotice("Monitor order saved. Configuration changes are used on the next minute boundary.");
       if (selectedPanelId) {
