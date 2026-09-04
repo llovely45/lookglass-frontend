@@ -152,7 +152,7 @@ describe("DashboardPage", () => {
   it("renders the public dashboard copy in Chinese", async () => {
     render(<DashboardPage />);
 
-    expect(await screen.findByRole("heading", { name: "网络状态" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "服务连通性" })).toBeInTheDocument();
     expect(
       screen.getByText("最近 24 小时的服务状态，一眼查看整体连通性。"),
     ).toBeInTheDocument();

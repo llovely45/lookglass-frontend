@@ -113,7 +113,7 @@ export default function DashboardPage() {
               </span>
               <div className="dashboard-brand__copy">
                 <p className="eyebrow">{siteTitle}</p>
-                <h1>网络状态</h1>
+                <h1>服务连通性</h1>
               </div>
             </div>
             <p className="dashboard-header__description">
