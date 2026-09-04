@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import { normalizeSamples } from "../components/SampleGrid";
 import type { StatusSnapshot } from "../contracts";
 
 vi.mock("../lib/statusApi", async () => {
@@ -100,5 +101,48 @@ describe("DashboardPage", () => {
         String(request).startsWith("https://worker.example.test"),
       ),
     ).toBe(false);
+  });
+
+  it("keeps the latest timestamp when samples share a bucket", () => {
+    const bucketStart = 1_735_689_600;
+    const normalized = normalizeSamples(
+      [
+        { t: bucketStart + 1_500, s: "ok", v: 321, code: 200 },
+        { t: bucketStart + 300, s: "ok", v: 111, code: 500 },
+      ],
+      bucketStart,
+    );
+
+    expect(normalized).toHaveLength(48);
+    expect(normalized[47]).toEqual({
+      t: bucketStart,
+      s: "ok",
+      v: 321,
+      code: 200,
+    });
+  });
+
+  it("moves focus to the tab selected with Arrow, Home, and End", async () => {
+    const user = userEvent.setup();
+
+    render(<DashboardPage />);
+
+    const firstTab = await screen.findByRole("tab", { name: "Web endpoints" });
+    const secondTab = screen.getByRole("tab", { name: "TCP endpoints" });
+
+    firstTab.focus();
+    await user.keyboard("{ArrowRight}");
+    await waitFor(() => expect(secondTab).toHaveAttribute("aria-selected", "true"));
+    expect(document.activeElement).toBe(secondTab);
+
+    await user.click(secondTab);
+    await user.keyboard("{Home}");
+    await waitFor(() => expect(firstTab).toHaveAttribute("aria-selected", "true"));
+    expect(document.activeElement).toBe(firstTab);
+
+    await user.click(firstTab);
+    await user.keyboard("{End}");
+    await waitFor(() => expect(secondTab).toHaveAttribute("aria-selected", "true"));
+    expect(document.activeElement).toBe(secondTab);
   });
 });

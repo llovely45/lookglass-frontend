@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from "react";
+import { useRef, type KeyboardEvent } from "react";
 
 import type { StatusSnapshot } from "../contracts";
 
@@ -49,7 +49,14 @@ export default function PanelTabs({
   selectedPanelId,
   onSelect,
 }: PanelTabsProps) {
+  const tabRefs = useRef(new Map<string, HTMLButtonElement>());
+
   if (panels.length === 0) return null;
+
+  const selectFromKeyboard = (panelId: string): void => {
+    onSelect(panelId);
+    tabRefs.current.get(panelId)?.focus();
+  };
 
   return (
     <nav className="panel-tabs" aria-label="Status panels">
@@ -60,6 +67,13 @@ export default function PanelTabs({
           return (
             <button
               key={panel.id}
+              ref={(element) => {
+                if (element) {
+                  tabRefs.current.set(panel.id, element);
+                } else {
+                  tabRefs.current.delete(panel.id);
+                }
+              }}
               id={panelTabId(panel.id)}
               className={`panel-tab${isSelected ? " panel-tab--selected" : ""}`}
               type="button"
@@ -69,7 +83,12 @@ export default function PanelTabs({
               tabIndex={isSelected ? 0 : -1}
               onClick={() => onSelect(panel.id)}
               onKeyDown={(event) =>
-                moveSelection(event, panels, selectedPanelId, onSelect)
+                moveSelection(
+                  event,
+                  panels,
+                  selectedPanelId,
+                  selectFromKeyboard,
+                )
               }
             >
               {panel.logoUrl ? (

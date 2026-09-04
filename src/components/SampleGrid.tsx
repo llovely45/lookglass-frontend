@@ -35,20 +35,20 @@ export function normalizeSamples(
   for (const sample of samples) {
     const bucket =
       Math.floor(sample.t / HALF_HOUR_SECONDS) * HALF_HOUR_SECONDS;
-    samplesByBucket.set(bucket, sample);
+    const existingSample = samplesByBucket.get(bucket);
+    if (!existingSample || sample.t > existingSample.t) {
+      samplesByBucket.set(bucket, sample);
+    }
   }
 
   return Array.from({ length: SAMPLE_SLOT_COUNT }, (_, index) => {
     const timestamp =
       latestBucket -
       (SAMPLE_SLOT_COUNT - 1 - index) * HALF_HOUR_SECONDS;
-    return (
-      samplesByBucket.get(timestamp) ?? {
-        t: timestamp,
-        s: "missing",
-        v: null,
-      }
-    );
+    const sample = samplesByBucket.get(timestamp);
+    return sample
+      ? { ...sample, t: timestamp }
+      : { t: timestamp, s: "missing", v: null };
   });
 }
 
