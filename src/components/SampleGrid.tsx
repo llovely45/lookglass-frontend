@@ -98,8 +98,10 @@ export default function SampleGrid({
   return (
     <section className="sample-grid-section" aria-labelledby={headingId}>
       <div className="sample-grid-heading-row">
-        <h3 id={headingId}>最近 48 个半小时采样</h3>
-        <span className="sample-grid-range">最新在右侧</span>
+        <span className="sample-grid-title" id={headingId}>
+          最近 24 小时
+        </span>
+        <span className="sample-grid-range">较早 → 最新</span>
       </div>
       <div className="sample-grid-scroll" tabIndex={0}>
         <div className="sample-grid" role="group" aria-label="48 个状态采样">

@@ -1,6 +1,5 @@
 import type { StatusSnapshot } from "../contracts";
 import SampleGrid from "./SampleGrid";
-import StatusLegend from "./StatusLegend";
 
 export type DashboardMonitor =
   StatusSnapshot["panels"][number]["monitors"][number];
@@ -10,16 +9,47 @@ interface MonitorCardProps {
   snapshotGeneratedAt: number;
 }
 
-function monitorKindLabel(kind: DashboardMonitor["kind"]): string {
-  return kind === "tcping" ? "TCPing" : "HTTP GET";
+type MonitorHealthTone = "ok" | "issue" | "unknown";
+
+interface MonitorHealth {
+  label: string;
+  tone: MonitorHealthTone;
+}
+
+function getLatestSample(
+  samples: readonly DashboardMonitor["samples"][number][],
+): DashboardMonitor["samples"][number] | undefined {
+  return samples.reduce<DashboardMonitor["samples"][number] | undefined>(
+    (latest, sample) => (!latest || sample.t > latest.t ? sample : latest),
+    undefined,
+  );
+}
+
+function getMonitorHealth(monitor: DashboardMonitor): MonitorHealth {
+  const latestSample = getLatestSample(monitor.samples);
+
+  if (!latestSample || latestSample.s === "missing") {
+    return { label: "暂无数据", tone: "unknown" };
+  }
+
+  if (latestSample.s === "ok" && latestSample.v !== null) {
+    return { label: "运行正常", tone: "ok" };
+  }
+
+  return { label: "需要关注", tone: "issue" };
 }
 
 export default function MonitorCard({
   monitor,
   snapshotGeneratedAt,
 }: MonitorCardProps) {
+  const health = getMonitorHealth(monitor);
+
   return (
-    <article className="monitor-card" data-testid="monitor-card">
+    <article
+      className={`monitor-card monitor-card--${health.tone}`}
+      data-testid="monitor-card"
+    >
       <header className="monitor-card__header">
         <div className="monitor-card__identity">
           {monitor.logoUrl ? (
@@ -31,13 +61,16 @@ export default function MonitorCard({
           )}
           <div>
             <h3 className="monitor-card__name">{monitor.name}</h3>
-            <p className="monitor-card__kind">{monitorKindLabel(monitor.kind)}</p>
+            <p className="monitor-card__subtitle">最近 24 小时状态</p>
           </div>
         </div>
-        <p className="monitor-card__target">
-          <span className="sr-only">目标： </span>
-          <code>{monitor.target}</code>
-        </p>
+        <div
+          className={`monitor-card__health monitor-card__health--${health.tone}`}
+          aria-label={`当前状态：${health.label}`}
+        >
+          <span className="monitor-card__health-dot" aria-hidden="true" />
+          <span>{health.label}</span>
+        </div>
       </header>
 
       <SampleGrid
@@ -45,7 +78,6 @@ export default function MonitorCard({
         samples={monitor.samples}
         anchorSeconds={snapshotGeneratedAt}
       />
-      <StatusLegend kind={monitor.kind} />
     </article>
   );
 }

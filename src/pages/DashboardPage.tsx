@@ -19,10 +19,6 @@ function errorMessage(error: unknown): string {
   return "无法加载公开状态快照。";
 }
 
-function panelMonitorCountLabel(count: number): string {
-  return `${count} 个监控`;
-}
-
 export default function DashboardPage() {
   const [snapshot, setSnapshot] = useState<StatusSnapshot | null>(null);
   const [selectedPanelId, setSelectedPanelId] = useState<string | null>(null);
@@ -87,24 +83,44 @@ export default function DashboardPage() {
   }, [snapshot]);
 
   const siteTitle = SITE_TITLE?.trim() || "Lookglass";
+  const snapshotIsStale = snapshot ? isSnapshotStale(snapshot) : false;
 
   return (
-    <main className="dashboard-shell">
-      <div className="page-container">
-        <header className="dashboard-header">
-          <div>
-            <p className="eyebrow">{siteTitle}</p>
-            <h1>公开状态</h1>
+    <main className="dashboard-shell dashboard-shell--public">
+      <div className="page-container page-container--public">
+        <header className="dashboard-header dashboard-header--public">
+          <div className="dashboard-header__main">
+            <div className="dashboard-brand">
+              <span className="dashboard-brand__mark" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+              <div className="dashboard-brand__copy">
+                <p className="eyebrow">{siteTitle}</p>
+                <h1>网络状态</h1>
+              </div>
+            </div>
             <p className="dashboard-header__description">
-              查看最新的 HTTP 和 TCPing 检查结果。
+              最近 24 小时的服务状态，一眼查看整体连通性。
             </p>
           </div>
-          {snapshot ? (
-            <p className="last-updated" aria-live="polite">
-              最近生成：{new Date(snapshot.generatedAt * 1_000).toLocaleString("zh-CN")}
-              {isRefreshing ? " · 正在刷新…" : ""}
-            </p>
-          ) : null}
+          <div className="dashboard-header__side">
+            <div
+              className={`live-status${snapshotIsStale ? " live-status--stale" : ""}`}
+              role="status"
+              aria-live="polite"
+            >
+              <span className="live-status__dot" aria-hidden="true" />
+              <span>{snapshotIsStale ? "数据延迟" : "状态监测中"}</span>
+            </div>
+            {snapshot ? (
+              <p className="last-updated" aria-live="polite">
+                最近更新：{new Date(snapshot.generatedAt * 1_000).toLocaleString("zh-CN")}
+                {isRefreshing ? " · 正在刷新…" : ""}
+              </p>
+            ) : null}
+          </div>
         </header>
 
         {isLoading && !snapshot ? (
@@ -140,13 +156,13 @@ export default function DashboardPage() {
 
         {snapshot && snapshot.panels.length > 0 ? (
           <section className="dashboard-content" data-testid="dashboard-content">
-            {isSnapshotStale(snapshot) ? (
+            {snapshotIsStale ? (
               <div className="status-banner status-banner--stale" data-testid="stale-banner" role="alert">
                 <strong>数据已过期。</strong>正在显示最近一次状态，等待新的公开快照。
               </div>
             ) : null}
 
-            {error && !isSnapshotStale(snapshot) ? (
+            {error && !snapshotIsStale ? (
               <div className="status-banner status-banner--warning" role="alert">
                 <strong>刷新失败。</strong>正在显示最近一次状态。{error}
               </div>
@@ -173,11 +189,11 @@ export default function DashboardPage() {
                 >
                   <header className="panel-content__header">
                     <div>
-                      <p className="eyebrow">当前分栏</p>
+                      <p className="eyebrow">状态概览</p>
                       <h2>{selectedPanel.name}</h2>
                     </div>
                     <p className="panel-content__count">
-                      {panelMonitorCountLabel(selectedPanel.monitors.length)}
+                      {selectedPanel.monitors.length} 项服务
                     </p>
                   </header>
 

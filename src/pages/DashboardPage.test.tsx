@@ -106,17 +106,18 @@ describe("DashboardPage", () => {
   it("renders the public dashboard copy in Chinese", async () => {
     render(<DashboardPage />);
 
-    expect(await screen.findByRole("heading", { name: "公开状态" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "网络状态" })).toBeInTheDocument();
     expect(
-      screen.getByText("查看最新的 HTTP 和 TCPing 检查结果。"),
+      screen.getByText("最近 24 小时的服务状态，一眼查看整体连通性。"),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "最近 48 个半小时采样" }),
+      screen.getByText("最近 24 小时"),
     ).toBeInTheDocument();
-    expect(screen.getByText("最新在右侧")).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "HTTP GET 延迟" }),
-    ).toBeInTheDocument();
+    expect(screen.getByText("较早 → 最新")).toBeInTheDocument();
+    expect(screen.queryByText("HTTP GET")).not.toBeInTheDocument();
+    expect(screen.queryByText("TCPing")).not.toBeInTheDocument();
+    expect(screen.queryByText("https://example.test/")).not.toBeInTheDocument();
+    expect(screen.queryByText("HTTP GET 延迟")).not.toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /本地时间：/ })[0]).toBeInTheDocument();
   });
 
