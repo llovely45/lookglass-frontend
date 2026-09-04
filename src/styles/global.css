@@ -1088,10 +1088,15 @@ h3 {
 }
 
 .dashboard-shell--public .monitor-list {
-  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  align-items: stretch;
+  gap: 0.9rem;
 }
 
 .dashboard-shell--public .monitor-card {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
   padding: 1.05rem 1.15rem 1.2rem;
   border-color: var(--public-line);
   border-radius: 1.05rem;
@@ -1178,6 +1183,11 @@ h3 {
 .dashboard-shell--public .sample-grid-heading-row {
   align-items: center;
   margin-bottom: 0.6rem;
+}
+
+.dashboard-shell--public .sample-grid-section {
+  width: 100%;
+  margin-top: auto;
 }
 
 .dashboard-shell--public .sample-grid-title {
@@ -1278,6 +1288,10 @@ h3 {
 
   .dashboard-shell--public .monitor-card__health {
     align-self: flex-start;
+  }
+
+  .dashboard-shell--public .monitor-list {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .dashboard-shell--public .sample-grid {
