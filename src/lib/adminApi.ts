@@ -52,6 +52,15 @@ export interface DeleteResponse {
   deleted: true;
 }
 
+export interface OrderItem {
+  id: string;
+  sort_order: number;
+}
+
+export interface ReorderResponse {
+  reordered: true;
+}
+
 type JsonRecord = Record<string, unknown>;
 
 export class AdminApiError extends Error {
@@ -248,6 +257,15 @@ export function listPanels(): Promise<PanelRecord[]> {
   return request<PanelRecord[]>("/api/admin/panels");
 }
 
+export function reorderPanels(
+  items: readonly OrderItem[],
+): Promise<ReorderResponse> {
+  return request<ReorderResponse>("/api/admin/panels/order", {
+    method: "PATCH",
+    body: { items },
+  });
+}
+
 export function savePanel(
   input: PanelInput,
   id?: string,
@@ -273,6 +291,16 @@ export function listMonitors(panelId?: string): Promise<MonitorRecord[]> {
     ? `/api/admin/monitors?panel_id=${encodeURIComponent(panelId)}`
     : "/api/admin/monitors";
   return request<MonitorRecord[]>(path);
+}
+
+export function reorderMonitors(
+  panelId: string,
+  items: readonly OrderItem[],
+): Promise<ReorderResponse> {
+  return request<ReorderResponse>("/api/admin/monitors/order", {
+    method: "PATCH",
+    body: { panel_id: panelId, items },
+  });
 }
 
 export function saveMonitor(

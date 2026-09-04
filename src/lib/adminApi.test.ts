@@ -14,6 +14,8 @@ import {
   listPanels,
   login,
   logout,
+  reorderMonitors,
+  reorderPanels,
   saveMonitor,
   savePanel,
 } from "./adminApi";
@@ -159,6 +161,41 @@ describe("admin API client", () => {
       "Content-Type": "application/json",
     });
     expect(monitorOptions.body).toBe(JSON.stringify(monitorInput));
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ reordered: true }));
+    await expect(
+      reorderPanels([
+        { id: "panel-2", sort_order: 0 },
+        { id: "panel-1", sort_order: 1 },
+      ]),
+    ).resolves.toEqual({ reordered: true });
+    const panelOrderOptions = expectRequest(2, "/api/admin/panels/order", "PATCH");
+    expect(panelOrderOptions.body).toBe(
+      JSON.stringify({
+        items: [
+          { id: "panel-2", sort_order: 0 },
+          { id: "panel-1", sort_order: 1 },
+        ],
+      }),
+    );
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ reordered: true }));
+    await expect(
+      reorderMonitors("panel-1", [
+        { id: "monitor-2", sort_order: 0 },
+        { id: "monitor-1", sort_order: 1 },
+      ]),
+    ).resolves.toEqual({ reordered: true });
+    const monitorOrderOptions = expectRequest(3, "/api/admin/monitors/order", "PATCH");
+    expect(monitorOrderOptions.body).toBe(
+      JSON.stringify({
+        panel_id: "panel-1",
+        items: [
+          { id: "monitor-2", sort_order: 0 },
+          { id: "monitor-1", sort_order: 1 },
+        ],
+      }),
+    );
   });
 
   it("uses panel-scoped monitor listing and PATCH/DELETE resource URLs", async () => {

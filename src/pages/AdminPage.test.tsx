@@ -11,6 +11,8 @@ vi.mock("../lib/adminApi", () => ({
   listPanels: vi.fn(),
   login: vi.fn(),
   logout: vi.fn(),
+  reorderMonitors: vi.fn(),
+  reorderPanels: vi.fn(),
   saveMonitor: vi.fn(),
   savePanel: vi.fn(),
   subscribeSession: vi.fn(() => () => undefined),
@@ -21,6 +23,8 @@ import {
   listMonitors,
   listPanels,
   login,
+  reorderMonitors,
+  reorderPanels,
   saveMonitor,
   savePanel,
 } from "../lib/adminApi";
@@ -35,6 +39,8 @@ const listMonitorsMock = vi.mocked(listMonitors);
 const savePanelMock = vi.mocked(savePanel);
 const saveMonitorMock = vi.mocked(saveMonitor);
 const deletePanelMock = vi.mocked(deletePanel);
+const reorderPanelsMock = vi.mocked(reorderPanels);
+const reorderMonitorsMock = vi.mocked(reorderMonitors);
 
 const panel = {
   id: "panel-1",
@@ -78,6 +84,8 @@ describe("admin UI", () => {
     listMonitorsMock.mockResolvedValue([monitor]);
     savePanelMock.mockResolvedValue(panel);
     saveMonitorMock.mockResolvedValue(monitor);
+    reorderPanelsMock.mockResolvedValue({ reordered: true });
+    reorderMonitorsMock.mockResolvedValue({ reordered: true });
   });
 
   afterEach(() => {
@@ -235,7 +243,6 @@ describe("admin UI", () => {
     };
     listPanelsMock.mockResolvedValueOnce([panel, secondPanel]);
     listMonitorsMock.mockResolvedValue([]);
-    savePanelMock.mockResolvedValue(panel);
 
     render(<AdminPage />);
     await screen.findByRole("button", { name: /^Backup panel\b/ });
@@ -243,17 +250,15 @@ describe("admin UI", () => {
       screen.getByRole("button", { name: "Move Backup panel up" }),
     );
 
-    await waitFor(() => expect(savePanelMock).toHaveBeenCalledTimes(2));
-    expect(
-      savePanelMock.mock.calls.map(([input]) => input.sort_order),
-    ).toEqual([0, 1]);
-    expect(savePanelMock.mock.calls.map(([, id]) => id)).toEqual([
-      secondPanel.id,
-      panel.id,
+    await waitFor(() => expect(reorderPanelsMock).toHaveBeenCalledOnce());
+    expect(reorderPanelsMock).toHaveBeenCalledWith([
+      { id: secondPanel.id, sort_order: 0 },
+      { id: panel.id, sort_order: 1 },
     ]);
+    expect(savePanelMock).not.toHaveBeenCalled();
   });
 
-  it("compensates the first order write when the second write fails", async () => {
+  it("reports a failed bulk order write without issuing CRUD order writes", async () => {
     const user = userEvent.setup();
     const secondPanel = {
       ...panel,
@@ -263,10 +268,7 @@ describe("admin UI", () => {
     };
     listPanelsMock.mockResolvedValueOnce([panel, secondPanel]);
     listMonitorsMock.mockResolvedValue([]);
-    savePanelMock
-      .mockResolvedValueOnce(panel)
-      .mockRejectedValueOnce(new Error("second order write failed"))
-      .mockResolvedValueOnce(panel);
+    reorderPanelsMock.mockRejectedValueOnce(new Error("bulk order write failed"));
 
     render(<AdminPage />);
     await screen.findByRole("button", { name: /^Backup panel\b/ });
@@ -274,11 +276,66 @@ describe("admin UI", () => {
       screen.getByRole("button", { name: "Move Backup panel up" }),
     );
 
-    expect(
-      await screen.findByRole("alert"),
-    ).toHaveTextContent("previous order was restored");
-    expect(savePanelMock).toHaveBeenCalledTimes(3);
-    expect(savePanelMock.mock.calls[2][0]).toMatchObject({ sort_order: 0 });
-    expect(savePanelMock.mock.calls[2][1]).toBe(secondPanel.id);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "bulk order write failed",
+    );
+    expect(reorderPanelsMock).toHaveBeenCalledOnce();
+    expect(savePanelMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a stale panel-A refresh callback after panel B is selected", async () => {
+    const user = userEvent.setup();
+    const secondPanel = {
+      ...panel,
+      id: "panel-2",
+      name: "Backup panel",
+      sort_order: 1,
+    };
+    const secondMonitor = {
+      ...monitor,
+      id: "monitor-2",
+      panel_id: secondPanel.id,
+      name: "Backup monitor",
+    };
+    const panelARefresh = deferred<Array<typeof monitor>>();
+    const panelBRequest = deferred<Array<typeof secondMonitor>>();
+    let panelAListCalls = 0;
+
+    listPanelsMock.mockResolvedValueOnce([panel, secondPanel]);
+    listMonitorsMock.mockImplementation((panelId) => {
+      if (panelId === panel.id) {
+        panelAListCalls += 1;
+        return panelAListCalls === 1
+          ? Promise.resolve([monitor])
+          : panelARefresh.promise;
+      }
+      return panelBRequest.promise;
+    });
+    saveMonitorMock.mockResolvedValue(monitor);
+
+    render(<AdminPage />);
+    await screen.findByText("Homepage");
+    await user.click(screen.getByRole("button", { name: "Edit monitor Homepage" }));
+    await user.click(screen.getByRole("button", { name: "Save monitor" }));
+    await waitFor(() => expect(panelAListCalls).toBe(2));
+
+    await user.click(screen.getByRole("button", { name: /^Backup panel\b/ }));
+    await waitFor(() =>
+      expect(listMonitorsMock).toHaveBeenCalledWith(secondPanel.id),
+    );
+
+    await act(async () => {
+      panelBRequest.resolve([secondMonitor]);
+      await panelBRequest.promise;
+    });
+    expect(await screen.findByText("Backup monitor")).toBeInTheDocument();
+
+    await act(async () => {
+      panelARefresh.resolve([monitor]);
+      await panelARefresh.promise;
+    });
+
+    expect(screen.queryByText("Homepage")).not.toBeInTheDocument();
+    expect(screen.getByText("Backup monitor")).toBeInTheDocument();
   });
 });
