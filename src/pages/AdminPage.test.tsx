@@ -46,6 +46,7 @@ const panel = {
   id: "panel-1",
   name: "Main panel",
   logo_url: null,
+  nav_only: false,
   sort_order: 0,
   enabled: true,
   created_at: 1,
@@ -206,6 +207,28 @@ describe("admin UI", () => {
       "Logo 地址必须使用 HTTPS",
     );
     expect(savePanelMock).not.toHaveBeenCalled();
+  });
+
+  it("submits the only-NAV panel switch", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <PanelForm
+        defaultSortOrder={0}
+        onSaved={vi.fn()}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("名称"), "Navigation");
+    await user.click(screen.getByLabelText("仅 NAV 模式"));
+    await user.click(screen.getByRole("button", { name: "保存分栏" }));
+
+    await waitFor(() =>
+      expect(savePanelMock).toHaveBeenCalledWith(
+        expect.objectContaining({ nav_only: true }),
+        undefined,
+      ),
+    );
   });
 
   it("requires explicit confirmation before deleting a panel", async () => {

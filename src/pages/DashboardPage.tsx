@@ -212,16 +212,19 @@ export default function DashboardPage() {
               const selectedPanel =
                 snapshot.panels.find((panel) => panel.id === selectedPanelId) ??
                 snapshot.panels[0];
+              const panelDisplayMode: DisplayMode = selectedPanel.navOnly
+                ? "nav"
+                : displayMode;
 
               return (
                 <section
-                  className="panel-content"
+                  className={`panel-content${panelDisplayMode === "nav" ? " panel-content--nav" : ""}`}
                   id={panelContentId(selectedPanel.id)}
                   role="tabpanel"
                   aria-labelledby={panelTabId(selectedPanel.id)}
                   tabIndex={0}
                 >
-                  {displayMode === "lg" ? (
+                  {panelDisplayMode === "lg" ? (
                     <header className="panel-content__header">
                       <div>
                         <p className="eyebrow">状态概览</p>
@@ -240,7 +243,7 @@ export default function DashboardPage() {
                           key={monitor.id}
                           monitor={monitor}
                           snapshotGeneratedAt={snapshot.generatedAt}
-                          displayMode={displayMode}
+                          displayMode={panelDisplayMode}
                         />
                       ))}
                     </div>

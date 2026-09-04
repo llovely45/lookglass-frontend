@@ -354,7 +354,8 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
                     <span>
                       <strong>{panel.name}</strong>
                       <small>
-                        {panel.enabled ? "已启用" : "已停用"} · 排序 {panel.sort_order}
+                        {panel.enabled ? "已启用" : "已停用"}
+                        {panel.nav_only ? " · 仅 NAV" : ""} · 排序 {panel.sort_order}
                       </small>
                     </span>
                   </button>

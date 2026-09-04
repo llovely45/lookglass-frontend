@@ -23,9 +23,27 @@ import DashboardPage from "./DashboardPage";
 const loadStatusSnapshotMock = vi.mocked(loadStatusSnapshot);
 const HALF_HOUR_SECONDS = 1_800;
 
-function dashboardFixture(): StatusSnapshot {
+function dashboardFixture(includeNavOnly = false): StatusSnapshot {
   const generatedAt =
     Math.floor(Date.now() / HALF_HOUR_SECONDS) * HALF_HOUR_SECONDS;
+
+  const navOnlyPanel = {
+    id: "panel-nav",
+    name: "Navigation links",
+    logoUrl: null,
+    navOnly: true,
+    monitors: [
+      {
+        id: "monitor-nav",
+        name: "Docs",
+        logoUrl: null,
+        linkUrl: "https://docs.example.com/",
+        kind: "http_get" as const,
+        target: "https://docs.example.com/",
+        samples: [],
+      },
+    ],
+  } as unknown as StatusSnapshot["panels"][number];
 
   return {
     generatedAt,
@@ -36,6 +54,7 @@ function dashboardFixture(): StatusSnapshot {
         id: "panel-http",
         name: "Web endpoints",
         logoUrl: null,
+        navOnly: false,
         monitors: [
           {
             id: "monitor-http",
@@ -52,6 +71,7 @@ function dashboardFixture(): StatusSnapshot {
         id: "panel-tcp",
         name: "TCP endpoints",
         logoUrl: null,
+        navOnly: false,
         monitors: [
           {
             id: "monitor-tcp",
@@ -64,6 +84,7 @@ function dashboardFixture(): StatusSnapshot {
           },
         ],
       },
+      ...(includeNavOnly ? [navOnlyPanel] : []),
     ],
   };
 }
@@ -112,6 +133,27 @@ describe("DashboardPage", () => {
       screen.queryByRole("link", { name: "Database port" }),
     ).not.toBeInTheDocument();
     expect(window.localStorage.getItem(DISPLAY_MODE_STORAGE_KEY)).toBe("nav");
+  });
+
+  it("uses NAV card styling for an only-NAV panel even while LG is selected", async () => {
+    const user = userEvent.setup();
+    loadStatusSnapshotMock.mockResolvedValueOnce(dashboardFixture(true));
+
+    render(<DashboardPage />);
+
+    await user.click(
+      await screen.findByRole("tab", { name: "Navigation links" }),
+    );
+
+    expect(screen.getByRole("link", { name: "Docs" })).toHaveAttribute(
+      "href",
+      "https://docs.example.com/",
+    );
+    expect(
+      screen.getByRole("tabpanel", { name: "Navigation links" }),
+    ).toHaveClass("panel-content--nav");
+    expect(screen.queryByTestId("sample-cell")).not.toBeInTheDocument();
+    expect(screen.queryByText("状态概览")).not.toBeInTheDocument();
   });
 
   it("restores the persisted display mode on a later render", async () => {

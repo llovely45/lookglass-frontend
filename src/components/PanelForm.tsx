@@ -17,6 +17,7 @@ interface PanelFormProps {
 interface PanelFormState {
   name: string;
   logoUrl: string;
+  navOnly: boolean;
   sortOrder: string;
   enabled: boolean;
 }
@@ -28,6 +29,7 @@ function formStateFromPanel(
   return {
     name: panel?.name ?? "",
     logoUrl: panel?.logo_url ?? "",
+    navOnly: panel?.nav_only ?? false,
     sortOrder: String(panel?.sort_order ?? defaultSortOrder),
     enabled: panel?.enabled ?? true,
   };
@@ -104,6 +106,7 @@ export default function PanelForm({
     const input: PanelInput = {
       name,
       logo_url: logoUrl || null,
+      nav_only: form.navOnly,
       sort_order: sortOrder,
       enabled: form.enabled,
     };
@@ -204,6 +207,21 @@ export default function PanelForm({
             }
           />
           <span>已启用</span>
+        </label>
+
+        <label className="checkbox-field">
+          <input
+            name="nav_only"
+            type="checkbox"
+            checked={form.navOnly}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                navOnly: event.target.checked,
+              }))
+            }
+          />
+          <span>仅 NAV 模式</span>
         </label>
       </div>
 

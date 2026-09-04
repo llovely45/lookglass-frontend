@@ -17,6 +17,7 @@ export interface StatusSnapshot {
     id: string;
     name: string;
     logoUrl: string | null;
+    navOnly: boolean;
     monitors: Array<{
       id: string;
       name: string;

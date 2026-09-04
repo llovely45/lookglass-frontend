@@ -54,6 +54,11 @@ right. `LG` shows the monitoring status cards and half-hour status cells;
 mode only when the Worker configuration supplies a `link_url`; monitors
 without one remain non-clickable.
 
+The admin panel form has an `仅 NAV 模式` switch. A panel with this switch
+enabled keeps its configured navigation monitors in the public snapshot, but
+the Worker does not run their HTTP GET or TCPing checks. The panel uses NAV
+cards even when the global display switch is set to LG.
+
 The selected mode is stored in the browser under
 `lookglass-display-mode` and restored on the next visit. Storage errors do not
 prevent the current page from switching modes.

@@ -26,6 +26,7 @@ const fetchMock = vi.fn<typeof fetch>();
 const panelInput = {
   name: "Main panel",
   logo_url: "https://assets.example.test/panel.svg",
+  nav_only: false,
   sort_order: 2,
   enabled: true,
 };

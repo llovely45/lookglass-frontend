@@ -1180,6 +1180,10 @@ h3 {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
 }
 
+.dashboard-shell--public .panel-content--nav .monitor-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+}
+
 .dashboard-shell--public .monitor-card--nav {
   min-height: 5.6rem;
   padding: 0;
@@ -1389,6 +1393,10 @@ h3 {
   }
 
   .dashboard-shell--public .monitor-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-shell--public .panel-content--nav .monitor-list {
     grid-template-columns: minmax(0, 1fr);
   }
 

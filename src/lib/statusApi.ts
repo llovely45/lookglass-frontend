@@ -60,6 +60,20 @@ function stringOrNullAt(value: unknown, path: string): string | null {
   return value;
 }
 
+function booleanOrDefaultAt(
+  value: unknown,
+  path: string,
+  defaultValue: boolean,
+): boolean {
+  if (value === undefined) {
+    return defaultValue;
+  }
+  if (typeof value !== "boolean") {
+    invalid(path, "must be a boolean");
+  }
+  return value;
+}
+
 function navigationUrlAt(value: unknown, path: string): string | null {
   if (value === undefined || value === null) {
     return null;
@@ -152,6 +166,7 @@ function validateSnapshotShape(value: unknown): StatusSnapshot {
   const panels = arrayAt(snapshot.panels, "panels");
   const panelIds = new Set<string>();
   const monitorIds = new Set<string>();
+  const normalizedPanels: JsonRecord[] = [];
 
   panels.forEach((panelValue, panelIndex) => {
     const panelPath = `panels[${panelIndex}]`;
@@ -165,6 +180,11 @@ function validateSnapshotShape(value: unknown): StatusSnapshot {
 
     nonEmptyStringAt(panel.name, `${panelPath}.name`);
     stringOrNullAt(panel.logoUrl, `${panelPath}.logoUrl`);
+    const navOnly = booleanOrDefaultAt(
+      panel.navOnly,
+      `${panelPath}.navOnly`,
+      false,
+    );
 
     const monitors = arrayAt(panel.monitors, `${panelPath}.monitors`);
     monitors.forEach((monitorValue, monitorIndex) => {
@@ -193,9 +213,14 @@ function validateSnapshotShape(value: unknown): StatusSnapshot {
         validateSample(sample, `${monitorPath}.samples[${sampleIndex}]`),
       );
     });
+
+    normalizedPanels.push({ ...panel, navOnly });
   });
 
-  return snapshot as unknown as StatusSnapshot;
+  return {
+    ...snapshot,
+    panels: normalizedPanels,
+  } as unknown as StatusSnapshot;
 }
 
 export function validateStatusSnapshot(value: unknown): StatusSnapshot {

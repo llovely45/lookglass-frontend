@@ -21,6 +21,7 @@ function validSnapshot(): StatusSnapshot {
         id: "panel-1",
         name: "Main",
         logoUrl: null,
+        navOnly: false,
         monitors: [
           {
             id: "monitor-1",
@@ -152,6 +153,24 @@ describe("loadStatusSnapshot", () => {
     respond(snapshot);
 
     await expect(loadStatusSnapshot()).rejects.toThrow(/samples/);
+  });
+
+  it("rejects a panel with a non-boolean only-NAV flag", async () => {
+    const snapshot = cloneSnapshot();
+    snapshot.panels[0].navOnly = "true";
+    respond(snapshot);
+
+    await expect(loadStatusSnapshot()).rejects.toThrow(/Invalid status snapshot/);
+  });
+
+  it("defaults the only-NAV flag for a legacy snapshot", async () => {
+    const snapshot = cloneSnapshot();
+    delete snapshot.panels[0].navOnly;
+    respond(snapshot);
+
+    await expect(loadStatusSnapshot()).resolves.toMatchObject({
+      panels: [{ navOnly: false }],
+    });
   });
 });
 
