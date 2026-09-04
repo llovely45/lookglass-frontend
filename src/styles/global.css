@@ -135,8 +135,7 @@ h3 {
 .dashboard-header__description,
 .last-updated,
 .state-card p,
-.panel-content__count,
-.sample-grid-range {
+.panel-content__count {
   color: var(--ink-muted);
 }
 
@@ -677,11 +676,6 @@ h3 {
   margin-bottom: 0;
 }
 
-.sample-grid-range {
-  font-size: 0.72rem;
-  white-space: nowrap;
-}
-
 .sample-grid-scroll {
   overflow-x: auto;
   padding: 0.3rem 0.2rem 0.8rem;
@@ -1196,11 +1190,6 @@ h3 {
   font-weight: 750;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.dashboard-shell--public .sample-grid-range {
-  color: var(--public-ink-faint);
-  font-size: 0.7rem;
 }
 
 .dashboard-shell--public .sample-grid-scroll {

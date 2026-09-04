@@ -113,7 +113,7 @@ describe("DashboardPage", () => {
     expect(
       screen.getByText("最近 24 小时"),
     ).toBeInTheDocument();
-    expect(screen.getByText("较早 → 最新")).toBeInTheDocument();
+    expect(screen.queryByText("较早 → 最新")).not.toBeInTheDocument();
     expect(screen.queryByText("HTTP GET")).not.toBeInTheDocument();
     expect(screen.queryByText("TCPing")).not.toBeInTheDocument();
     expect(screen.queryByText("https://example.test/")).not.toBeInTheDocument();
