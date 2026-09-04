@@ -121,6 +121,7 @@ export default function SampleGrid({
                 data-timestamp={sample.t}
                 data-color={color}
                 aria-label={label}
+                title={sample.v === null ? undefined : `${sample.v}ms`}
                 style={{ backgroundColor: color }}
               />
             );

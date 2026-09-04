@@ -118,9 +118,11 @@ describe("DashboardPage", () => {
     expect(screen.queryByText("TCPing")).not.toBeInTheDocument();
     expect(screen.queryByText("https://example.test/")).not.toBeInTheDocument();
     expect(screen.queryByText("HTTP GET 延迟")).not.toBeInTheDocument();
-    const firstSample = screen.getAllByRole("button", { name: /本地时间：/ })[0];
+    const samples = screen.getAllByRole("button", { name: /本地时间：/ });
+    const firstSample = samples[0];
     expect(firstSample).toBeInTheDocument();
     expect(firstSample).not.toHaveAttribute("title");
+    expect(samples[samples.length - 1]).toHaveAttribute("title", "420ms");
   });
 
   it("keeps the latest timestamp when samples share a bucket", () => {
