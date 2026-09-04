@@ -14,14 +14,19 @@ const SAMPLE_STATE_LABELS: Record<StatusSample["s"], string> = {
   missing: "Missing",
 };
 
+function currentHalfHourSeconds(): number {
+  return (
+    Math.floor(Date.now() / 1_000 / HALF_HOUR_SECONDS) * HALF_HOUR_SECONDS
+  );
+}
+
 export function normalizeSamples(
   samples: readonly StatusSample[],
-  anchorSeconds: number = Math.floor(Date.now() / HALF_HOUR_SECONDS) *
-    HALF_HOUR_SECONDS,
+  anchorSeconds: number = currentHalfHourSeconds(),
 ): StatusSample[] {
   const safeAnchor = Number.isFinite(anchorSeconds)
     ? Math.floor(anchorSeconds / HALF_HOUR_SECONDS) * HALF_HOUR_SECONDS
-    : Math.floor(Date.now() / HALF_HOUR_SECONDS) * HALF_HOUR_SECONDS;
+    : currentHalfHourSeconds();
   const latestSampleSeconds = samples.reduce(
     (latest, sample) => Math.max(latest, sample.t),
     Number.NEGATIVE_INFINITY,

@@ -122,6 +122,18 @@ describe("DashboardPage", () => {
     });
   });
 
+  it("uses Unix seconds when the sample grid has no explicit anchor", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date((1_735_689_600 + 900) * 1_000));
+
+    try {
+      const normalized = normalizeSamples([]);
+      expect(normalized[47]?.t).toBe(1_735_689_600);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("moves focus to the tab selected with Arrow, Home, and End", async () => {
     const user = userEvent.setup();
 
