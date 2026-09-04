@@ -46,7 +46,7 @@ function errorMessage(error: unknown): string {
   if (error instanceof Error && error.message.trim()) {
     return error.message;
   }
-  return "The panel could not be saved.";
+  return "分栏保存失败。";
 }
 
 function isUnauthorized(error: unknown): boolean {
@@ -85,19 +85,19 @@ export default function PanelForm({
 
     const name = form.name.trim();
     if (!name) {
-      setError("Name is required");
+      setError("必须填写名称");
       return;
     }
 
     const logoUrl = form.logoUrl.trim();
     if (logoUrl && !isHttpsUrl(logoUrl)) {
-      setError("Logo URL must use HTTPS");
+      setError("Logo 地址必须使用 HTTPS");
       return;
     }
 
     const sortOrder = Number(form.sortOrder);
     if (!Number.isSafeInteger(sortOrder)) {
-      setError("Sort order must be an integer");
+      setError("排序必须是整数");
       return;
     }
 
@@ -130,12 +130,12 @@ export default function PanelForm({
     <form className="admin-form" onSubmit={(event) => void submit(event)}>
       <div className="admin-form__header">
         <div>
-          <p className="eyebrow">{isEditing ? "Edit panel" : "New panel"}</p>
-          <h3>{isEditing ? "Update panel" : "Add a panel"}</h3>
+          <p className="eyebrow">{isEditing ? "编辑分栏" : "新建分栏"}</p>
+          <h3>{isEditing ? "更新分栏" : "新增分栏"}</h3>
         </div>
         {onCancel ? (
           <button className="button button--secondary" type="button" onClick={onCancel}>
-            Cancel
+            取消
           </button>
         ) : null}
       </div>
@@ -148,7 +148,7 @@ export default function PanelForm({
 
       <div className="form-grid">
         <label className="form-field">
-          <span>Name</span>
+          <span>名称</span>
           <input
             autoComplete="off"
             name="name"
@@ -161,7 +161,7 @@ export default function PanelForm({
         </label>
 
         <label className="form-field">
-          <span>Logo URL</span>
+          <span>Logo 地址</span>
           <input
             autoComplete="url"
             name="logo_url"
@@ -175,7 +175,7 @@ export default function PanelForm({
         </label>
 
         <label className="form-field form-field--compact">
-          <span>Sort order</span>
+          <span>排序</span>
           <input
             inputMode="numeric"
             min="0"
@@ -203,20 +203,20 @@ export default function PanelForm({
               }))
             }
           />
-          <span>Enabled</span>
+          <span>已启用</span>
         </label>
       </div>
 
       {previewUrl && isHttpsUrl(previewUrl) ? (
         <div className="logo-preview">
-          <span>Logo preview</span>
-          <img src={previewUrl} alt="Panel logo preview" />
+          <span>Logo 预览</span>
+          <img src={previewUrl} alt="分栏 Logo 预览" />
         </div>
       ) : null}
 
       <div className="form-actions">
         <button className="button button--primary" type="submit" disabled={isSaving}>
-          {isSaving ? "Saving…" : "Save panel"}
+          {isSaving ? "保存中…" : "保存分栏"}
         </button>
       </div>
     </form>

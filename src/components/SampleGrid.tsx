@@ -7,11 +7,11 @@ export const SAMPLE_SLOT_COUNT = 48;
 export const HALF_HOUR_SECONDS = 1_800;
 
 const SAMPLE_STATE_LABELS: Record<StatusSample["s"], string> = {
-  ok: "OK",
-  http_error: "HTTP error",
-  timeout: "Timeout",
-  error: "Error",
-  missing: "Missing",
+  ok: "正常",
+  http_error: "HTTP 错误",
+  timeout: "超时",
+  error: "错误",
+  missing: "缺失",
 };
 
 function currentHalfHourSeconds(): number {
@@ -58,7 +58,7 @@ export function normalizeSamples(
 }
 
 function localTimeLabel(timestamp: number): string {
-  return new Date(timestamp * 1_000).toLocaleString(undefined, {
+  return new Date(timestamp * 1_000).toLocaleString("zh-CN", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -69,13 +69,13 @@ function localTimeLabel(timestamp: number): string {
 
 function sampleLabel(sample: StatusSample): string {
   const details = [
-    `Local time: ${localTimeLabel(sample.t)}`,
-    `State: ${SAMPLE_STATE_LABELS[sample.s]}`,
-    `Latency: ${sample.v === null ? "unavailable" : `${sample.v} ms`}`,
+    `本地时间：${localTimeLabel(sample.t)}`,
+    `状态：${SAMPLE_STATE_LABELS[sample.s]}`,
+    `延迟：${sample.v === null ? "不可用" : `${sample.v} ms`}`,
   ];
 
   if (typeof sample.code === "number") {
-    details.push(`HTTP code: ${sample.code}`);
+    details.push(`HTTP 状态码：${sample.code}`);
   }
 
   return details.join("; ");
@@ -98,11 +98,11 @@ export default function SampleGrid({
   return (
     <section className="sample-grid-section" aria-labelledby={headingId}>
       <div className="sample-grid-heading-row">
-        <h3 id={headingId}>Last 48 half-hour checks</h3>
-        <span className="sample-grid-range">Newest on the right</span>
+        <h3 id={headingId}>最近 48 个半小时采样</h3>
+        <span className="sample-grid-range">最新在右侧</span>
       </div>
       <div className="sample-grid-scroll" tabIndex={0}>
-        <div className="sample-grid" role="group" aria-label="48 status samples">
+        <div className="sample-grid" role="group" aria-label="48 个状态采样">
           {normalizedSamples.map((sample) => {
             const color =
               sample.s === "missing"

@@ -99,10 +99,10 @@ describe("admin UI", () => {
 
     render(<LoginPage onAuthenticated={onAuthenticated} />);
 
-    const tokenInput = screen.getByLabelText("Token");
+    const tokenInput = screen.getByLabelText("管理 Token");
     expect(tokenInput).toHaveAttribute("type", "password");
     await user.type(tokenInput, "admin-token");
-    await user.click(screen.getByRole("button", { name: "Sign in" }));
+    await user.click(screen.getByRole("button", { name: "登录" }));
 
     await waitFor(() => expect(loginMock).toHaveBeenCalledWith("admin-token"));
     expect(onAuthenticated).toHaveBeenCalledOnce();
@@ -113,8 +113,8 @@ describe("admin UI", () => {
     loginMock.mockRejectedValue(new Error("invalid credentials"));
 
     render(<LoginPage />);
-    await user.type(screen.getByLabelText("Token"), "wrong-token");
-    await user.click(screen.getByRole("button", { name: "Sign in" }));
+    await user.type(screen.getByLabelText("管理 Token"), "wrong-token");
+    await user.click(screen.getByRole("button", { name: "登录" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "invalid credentials",
@@ -133,13 +133,24 @@ describe("admin UI", () => {
     );
 
     expect(screen.getByLabelText("URL")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Port")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("端口")).not.toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText("Kind"), "tcping");
+    await user.selectOptions(screen.getByLabelText("类型"), "tcping");
 
-    expect(screen.getByLabelText("Host/IP")).toBeInTheDocument();
-    expect(screen.getByLabelText("Port")).toBeInTheDocument();
+    expect(screen.getByLabelText("主机/IP")).toBeInTheDocument();
+    expect(screen.getByLabelText("端口")).toBeInTheDocument();
     expect(screen.queryByLabelText("URL")).not.toBeInTheDocument();
+  });
+
+  it("renders the administration page copy in Chinese", async () => {
+    render(<AdminPage />);
+
+    expect(await screen.findByRole("heading", { name: "管理配置" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "新增分栏" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Main panel 的监控" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "新增监控" })).toBeInTheDocument();
   });
 
   it("rejects non-HTTPS logo URLs before saving a panel", async () => {
@@ -152,15 +163,15 @@ describe("admin UI", () => {
       />,
     );
 
-    await user.type(screen.getByLabelText("Name"), "Main panel");
+    await user.type(screen.getByLabelText("名称"), "Main panel");
     await user.type(
-      screen.getByLabelText("Logo URL"),
+      screen.getByLabelText("Logo 地址"),
       "http://assets.example.test/logo.svg",
     );
-    await user.click(screen.getByRole("button", { name: "Save panel" }));
+    await user.click(screen.getByRole("button", { name: "保存分栏" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Logo URL must use HTTPS",
+      "Logo 地址必须使用 HTTPS",
     );
     expect(savePanelMock).not.toHaveBeenCalled();
   });
@@ -174,7 +185,7 @@ describe("admin UI", () => {
     render(<AdminPage />);
 
     const deleteButton = await screen.findByRole("button", {
-      name: "Delete panel Main panel",
+      name: "删除分栏 Main panel",
     });
     await user.click(deleteButton);
 
@@ -247,7 +258,7 @@ describe("admin UI", () => {
     render(<AdminPage />);
     await screen.findByRole("button", { name: /^Backup panel\b/ });
     await user.click(
-      screen.getByRole("button", { name: "Move Backup panel up" }),
+      screen.getByRole("button", { name: "上移 Backup panel" }),
     );
 
     await waitFor(() => expect(reorderPanelsMock).toHaveBeenCalledOnce());
@@ -273,7 +284,7 @@ describe("admin UI", () => {
     render(<AdminPage />);
     await screen.findByRole("button", { name: /^Backup panel\b/ });
     await user.click(
-      screen.getByRole("button", { name: "Move Backup panel up" }),
+      screen.getByRole("button", { name: "上移 Backup panel" }),
     );
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -315,8 +326,8 @@ describe("admin UI", () => {
 
     render(<AdminPage />);
     await screen.findByText("Homepage");
-    await user.click(screen.getByRole("button", { name: "Edit monitor Homepage" }));
-    await user.click(screen.getByRole("button", { name: "Save monitor" }));
+    await user.click(screen.getByRole("button", { name: "编辑监控 Homepage" }));
+    await user.click(screen.getByRole("button", { name: "保存监控" }));
     await waitFor(() => expect(panelAListCalls).toBe(2));
 
     await user.click(screen.getByRole("button", { name: /^Backup panel\b/ }));

@@ -35,7 +35,7 @@ export default function MonitorCard({
           </div>
         </div>
         <p className="monitor-card__target">
-          <span className="sr-only">Target: </span>
+          <span className="sr-only">目标： </span>
           <code>{monitor.target}</code>
         </p>
       </header>

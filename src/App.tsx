@@ -20,8 +20,8 @@ function AdminLoading() {
       <div className="page-container">
         <section className="state-card" role="status" aria-live="polite">
           <span className="loading-indicator" aria-hidden="true" />
-          <h1>Checking session</h1>
-          <p>Verifying the administrator session with the Worker.</p>
+          <h1>正在检查会话</h1>
+          <p>正在通过 Worker 验证管理员会话。</p>
         </section>
       </div>
     </main>

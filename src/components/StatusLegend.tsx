@@ -52,7 +52,7 @@ interface StatusLegendProps {
 export default function StatusLegend({ kind }: StatusLegendProps) {
   const headingId = useId();
   const entries = kind === "tcping" ? TCPING_ENTRIES : HTTP_ENTRIES;
-  const heading = kind === "tcping" ? "TCPing latency" : "HTTP GET latency";
+  const heading = kind === "tcping" ? "TCPing 延迟" : "HTTP GET 延迟";
 
   return (
     <section

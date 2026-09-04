@@ -103,6 +103,23 @@ describe("DashboardPage", () => {
     ).toBe(false);
   });
 
+  it("renders the public dashboard copy in Chinese", async () => {
+    render(<DashboardPage />);
+
+    expect(await screen.findByRole("heading", { name: "公开状态" })).toBeInTheDocument();
+    expect(
+      screen.getByText("查看最新的 HTTP 和 TCPing 检查结果。"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "最近 48 个半小时采样" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("最新在右侧")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "HTTP GET 延迟" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /本地时间：/ })[0]).toBeInTheDocument();
+  });
+
   it("keeps the latest timestamp when samples share a bucket", () => {
     const bucketStart = 1_735_689_600;
     const normalized = normalizeSamples(

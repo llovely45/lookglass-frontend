@@ -10,7 +10,7 @@ function errorMessage(error: unknown): string {
   if (error instanceof Error && error.message.trim()) {
     return error.message;
   }
-  return "Sign in failed. Check the token and try again.";
+  return "登录失败，请检查 Token 后重试。";
 }
 
 export default function LoginPage({ onAuthenticated }: LoginPageProps) {
@@ -23,7 +23,7 @@ export default function LoginPage({ onAuthenticated }: LoginPageProps) {
     setError(null);
 
     if (token.trim().length === 0) {
-      setError("Token is required");
+      setError("必须填写 Token");
       return;
     }
 
@@ -45,22 +45,21 @@ export default function LoginPage({ onAuthenticated }: LoginPageProps) {
         <header className="dashboard-header">
           <div>
             <p className="eyebrow">Lookglass</p>
-            <h1>Admin sign in</h1>
+            <h1>管理员登录</h1>
             <p className="dashboard-header__description">
-              Authenticate to manage panels and monitors.
+              登录后管理分栏和监控目标。
             </p>
           </div>
           <a className="text-link" href="/">
-            Public status
+            公开状态
           </a>
         </header>
 
         <section className="state-card login-card" aria-labelledby="login-heading">
-          <p className="state-card__eyebrow">Protected configuration</p>
-          <h2 id="login-heading">Sign in with your token</h2>
+          <p className="state-card__eyebrow">受保护的配置</p>
+          <h2 id="login-heading">使用 Token 登录</h2>
           <p>
-            The token is used for this sign-in request only and is kept out of browser
-            storage.
+            Token 仅用于本次登录请求，不会保存到浏览器存储。
           </p>
 
           <form className="admin-form" onSubmit={(event) => void submit(event)}>
@@ -71,7 +70,7 @@ export default function LoginPage({ onAuthenticated }: LoginPageProps) {
             ) : null}
 
             <label className="form-field">
-              <span>Token</span>
+              <span>管理 Token</span>
               <input
                 autoComplete="current-password"
                 name="token"
@@ -88,7 +87,7 @@ export default function LoginPage({ onAuthenticated }: LoginPageProps) {
                 type="submit"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Signing in…" : "Sign in"}
+                {isSubmitting ? "登录中…" : "登录"}
               </button>
             </div>
           </form>

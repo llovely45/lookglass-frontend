@@ -86,7 +86,7 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
       });
       return true;
     } catch (caughtError) {
-      handleError(caughtError, "The panels could not be loaded.");
+      handleError(caughtError, "无法加载分栏。");
       return false;
     } finally {
       setIsLoadingPanels(false);
@@ -119,7 +119,7 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
         ) {
           return false;
         }
-        handleError(caughtError, "The monitors could not be loaded.");
+        handleError(caughtError, "无法加载监控。");
         return false;
       } finally {
         if (
@@ -165,14 +165,14 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
 
   async function handlePanelSaved(): Promise<void> {
     setPanelFormMode(null);
-    setNotice("Panel saved. Configuration changes are used on the next minute boundary.");
+    setNotice("分栏已保存，配置将在下一分钟边界生效。");
     await loadPanels();
   }
 
   async function handleMonitorSaved(): Promise<void> {
     const panelId = selectedPanelId;
     setMonitorFormMode(null);
-    setNotice("Monitor saved. Configuration changes are used on the next minute boundary.");
+    setNotice("监控已保存，配置将在下一分钟边界生效。");
     if (panelId) {
       await loadMonitors(panelId);
     }
@@ -191,10 +191,10 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
       await reorderPanels(
         reordered.map((panel, sortOrder) => ({ id: panel.id, sort_order: sortOrder })),
       );
-      setNotice("Panel order saved. Configuration changes are used on the next minute boundary.");
+      setNotice("分栏排序已保存，配置将在下一分钟边界生效。");
       await loadPanels();
     } catch (caughtError) {
-      handleError(caughtError, "The panel order could not be saved.");
+      handleError(caughtError, "无法保存分栏排序。");
     }
   }
 
@@ -213,16 +213,16 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
         panelId,
         reordered.map((monitor, sortOrder) => ({ id: monitor.id, sort_order: sortOrder })),
       );
-      setNotice("Monitor order saved. Configuration changes are used on the next minute boundary.");
+      setNotice("监控排序已保存，配置将在下一分钟边界生效。");
       await loadMonitors(panelId);
     } catch (caughtError) {
-      handleError(caughtError, "The monitor order could not be saved.");
+      handleError(caughtError, "无法保存监控排序。");
     }
   }
 
   async function handlePanelDelete(panel: PanelRecord): Promise<void> {
     const confirmed = window.confirm(
-      `Delete panel ${panel.name}? This also deletes its monitors and results.`,
+      `确定删除分栏“${panel.name}”吗？该操作也会删除其中的监控和检查结果。`,
     );
     if (!confirmed) return;
 
@@ -235,10 +235,10 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
         setMonitors([]);
       }
       setPanelFormMode(null);
-      setNotice("Panel deleted. Configuration changes are used on the next minute boundary.");
+      setNotice("分栏已删除，配置将在下一分钟边界生效。");
       await loadPanels();
     } catch (caughtError) {
-      handleError(caughtError, "The panel could not be deleted.");
+      handleError(caughtError, "无法删除分栏。");
     } finally {
       setDeletingId(null);
     }
@@ -246,7 +246,7 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
 
   async function handleMonitorDelete(monitor: MonitorRecord): Promise<void> {
     const confirmed = window.confirm(
-      `Delete monitor ${monitor.name}? This cannot be undone.`,
+      `确定删除监控“${monitor.name}”吗？该操作无法撤销。`,
     );
     if (!confirmed) return;
 
@@ -255,12 +255,12 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
     try {
       await deleteMonitor(monitor.id);
       setMonitorFormMode(null);
-      setNotice("Monitor deleted. Configuration changes are used on the next minute boundary.");
+      setNotice("监控已删除，配置将在下一分钟边界生效。");
       if (selectedPanelId) {
         await loadMonitors(selectedPanelId);
       }
     } catch (caughtError) {
-      handleError(caughtError, "The monitor could not be deleted.");
+      handleError(caughtError, "无法删除监控。");
     } finally {
       setDeletingId(null);
     }
@@ -272,19 +272,18 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
         <header className="dashboard-header">
           <div>
             <p className="eyebrow">Lookglass</p>
-            <h1>Admin configuration</h1>
+            <h1>管理配置</h1>
             <p className="dashboard-header__description">
-              Manage the panels and public monitoring targets used by the next scheduled check.
+              管理分栏和公开监控目标，配置将在下一次定时检查时生效。
             </p>
           </div>
           <a className="text-link" href="/">
-            Public status
+            公开状态
           </a>
         </header>
 
         <div className="status-banner admin-boundary-note" role="status">
-          Configuration changes are used on the next minute boundary; this page does not claim an
-          immediate Cron run.
+          配置将在下一分钟边界生效；此页面不会声称会立即触发 Cron。
         </div>
 
         {error ? (
@@ -301,8 +300,8 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
         <section className="admin-section" aria-labelledby="panels-heading">
           <div className="admin-section__header">
             <div>
-              <p className="state-card__eyebrow">Configuration</p>
-              <h2 id="panels-heading">Panels</h2>
+              <p className="state-card__eyebrow">配置</p>
+              <h2 id="panels-heading">分栏</h2>
             </div>
             <button
               className="button button--primary"
@@ -313,7 +312,7 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
                 setPanelFormMode("new");
               }}
             >
-              Add panel
+              新增分栏
             </button>
           </div>
 
@@ -329,14 +328,14 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
 
           {isLoadingPanels ? (
             <p className="loading-copy" role="status">
-              Loading panels…
+              正在加载分栏…
             </p>
           ) : (
             <SortableList
               items={panels}
               getItemLabel={(panel) => panel.name}
               onMove={movePanel}
-              emptyMessage="No panels configured yet."
+              emptyMessage="还没有配置分栏。"
               renderItem={(panel) => (
                 <div className="admin-list-row">
                   <button
@@ -355,7 +354,7 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
                     <span>
                       <strong>{panel.name}</strong>
                       <small>
-                        {panel.enabled ? "Enabled" : "Disabled"} · sort {panel.sort_order}
+                        {panel.enabled ? "已启用" : "已停用"} · 排序 {panel.sort_order}
                       </small>
                     </span>
                   </button>
@@ -363,22 +362,22 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
                     <button
                       className="button button--secondary"
                       type="button"
-                      aria-label={`Edit panel ${panel.name}`}
+                      aria-label={`编辑分栏 ${panel.name}`}
                       onClick={() => {
                         setError(null);
                         setPanelFormMode(panel.id);
                       }}
                     >
-                      Edit
+                      编辑
                     </button>
                     <button
                       className="button button--danger"
                       type="button"
-                      aria-label={`Delete panel ${panel.name}`}
+                      aria-label={`删除分栏 ${panel.name}`}
                       disabled={deletingId === panel.id}
                       onClick={() => void handlePanelDelete(panel)}
                     >
-                      {deletingId === panel.id ? "Deleting…" : "Delete"}
+                      {deletingId === panel.id ? "删除中…" : "删除"}
                     </button>
                   </span>
                 </div>
@@ -390,9 +389,9 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
         <section className="admin-section" aria-labelledby="monitors-heading">
           <div className="admin-section__header">
             <div>
-              <p className="state-card__eyebrow">Selected panel</p>
+              <p className="state-card__eyebrow">当前分栏</p>
               <h2 id="monitors-heading">
-                {selectedPanel ? `${selectedPanel.name} monitors` : "Monitors"}
+                {selectedPanel ? `${selectedPanel.name} 的监控` : "监控"}
               </h2>
             </div>
             <button
@@ -405,12 +404,12 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
                 setMonitorFormMode("new");
               }}
             >
-              Add monitor
+              新增监控
             </button>
           </div>
 
           {!selectedPanel ? (
-            <p className="empty-list">Select or create a panel to manage its monitors.</p>
+            <p className="empty-list">请选择或创建一个分栏来管理监控。</p>
           ) : null}
 
           {selectedPanel && monitorFormMode ? (
@@ -426,7 +425,7 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
 
           {selectedPanel && isLoadingMonitors ? (
             <p className="loading-copy" role="status">
-              Loading monitors…
+              正在加载监控…
             </p>
           ) : null}
 
@@ -435,7 +434,7 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
               items={monitors}
               getItemLabel={(monitor) => monitor.name}
               onMove={moveMonitor}
-              emptyMessage="No monitors configured for this panel yet."
+              emptyMessage="该分栏还没有配置监控。"
               renderItem={(monitor) => (
                 <div className="admin-list-row">
                   <div className="admin-list-row__identity">
@@ -452,7 +451,7 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
                         {monitor.kind === "http_get"
                           ? `HTTP GET · ${monitor.target}`
                           : `TCPing · ${monitor.target}:${monitor.port ?? ""}`}
-                        {monitor.enabled ? " · Enabled" : " · Disabled"}
+                        {monitor.enabled ? " · 已启用" : " · 已停用"}
                       </small>
                     </span>
                   </div>
@@ -460,22 +459,22 @@ export default function AdminPage({ onUnauthenticated }: AdminPageProps) {
                     <button
                       className="button button--secondary"
                       type="button"
-                      aria-label={`Edit monitor ${monitor.name}`}
+                      aria-label={`编辑监控 ${monitor.name}`}
                       onClick={() => {
                         setError(null);
                         setMonitorFormMode(monitor.id);
                       }}
                     >
-                      Edit
+                      编辑
                     </button>
                     <button
                       className="button button--danger"
                       type="button"
-                      aria-label={`Delete monitor ${monitor.name}`}
+                      aria-label={`删除监控 ${monitor.name}`}
                       disabled={deletingId === monitor.id}
                       onClick={() => void handleMonitorDelete(monitor)}
                     >
-                      {deletingId === monitor.id ? "Deleting…" : "Delete"}
+                      {deletingId === monitor.id ? "删除中…" : "删除"}
                     </button>
                   </span>
                 </div>

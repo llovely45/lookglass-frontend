@@ -16,11 +16,11 @@ function errorMessage(error: unknown): string {
     return error.message;
   }
 
-  return "The public status snapshot could not be loaded.";
+  return "无法加载公开状态快照。";
 }
 
 function panelMonitorCountLabel(count: number): string {
-  return `${count} monitor${count === 1 ? "" : "s"}`;
+  return `${count} 个监控`;
 }
 
 export default function DashboardPage() {
@@ -94,15 +94,15 @@ export default function DashboardPage() {
         <header className="dashboard-header">
           <div>
             <p className="eyebrow">{siteTitle}</p>
-            <h1>Public status</h1>
+            <h1>公开状态</h1>
             <p className="dashboard-header__description">
-              A live view of the latest HTTP and TCPing checks.
+              查看最新的 HTTP 和 TCPing 检查结果。
             </p>
           </div>
           {snapshot ? (
             <p className="last-updated" aria-live="polite">
-              Last generated: {new Date(snapshot.generatedAt * 1_000).toLocaleString()}
-              {isRefreshing ? " · Refreshing…" : ""}
+              最近生成：{new Date(snapshot.generatedAt * 1_000).toLocaleString("zh-CN")}
+              {isRefreshing ? " · 正在刷新…" : ""}
             </p>
           ) : null}
         </header>
@@ -110,31 +110,31 @@ export default function DashboardPage() {
         {isLoading && !snapshot ? (
           <section className="state-card" data-testid="dashboard-loading" role="status">
             <span className="loading-indicator" aria-hidden="true" />
-            <h2>Loading status</h2>
-            <p>Fetching the latest public snapshot.</p>
+            <h2>正在加载状态</h2>
+            <p>正在获取最新的公开状态快照。</p>
           </section>
         ) : null}
 
         {!isLoading && !snapshot ? (
           <section className="state-card state-card--error" data-testid="dashboard-error" role="alert">
-            <p className="state-card__eyebrow">Status unavailable</p>
-            <h2>Unable to load status</h2>
-            <p>{error ?? "The public status snapshot could not be loaded."}</p>
+            <p className="state-card__eyebrow">状态不可用</p>
+            <h2>无法加载状态</h2>
+            <p>{error ?? "无法加载公开状态快照。"}</p>
             <button
               className="button button--primary"
               type="button"
               onClick={() => void fetchSnapshot(true)}
             >
-              Try again
+              重试
             </button>
           </section>
         ) : null}
 
         {snapshot && snapshot.panels.length === 0 ? (
           <section className="state-card" data-testid="dashboard-empty" role="status">
-            <p className="state-card__eyebrow">No panels</p>
-            <h2>No public monitors yet</h2>
-            <p>The public status snapshot does not contain any enabled panels.</p>
+            <p className="state-card__eyebrow">暂无分栏</p>
+            <h2>还没有公开监控</h2>
+            <p>公开状态快照中还没有启用的分栏。</p>
           </section>
         ) : null}
 
@@ -142,14 +142,13 @@ export default function DashboardPage() {
           <section className="dashboard-content" data-testid="dashboard-content">
             {isSnapshotStale(snapshot) ? (
               <div className="status-banner status-banner--stale" data-testid="stale-banner" role="alert">
-                <strong>Stale data.</strong> The last known snapshot is being shown while a
-                newer public snapshot becomes available.
+                <strong>数据已过期。</strong>正在显示最近一次状态，等待新的公开快照。
               </div>
             ) : null}
 
             {error && !isSnapshotStale(snapshot) ? (
               <div className="status-banner status-banner--warning" role="alert">
-                <strong>Refresh unavailable.</strong> Showing the last known status. {error}
+                <strong>刷新失败。</strong>正在显示最近一次状态。{error}
               </div>
             ) : null}
 
@@ -174,7 +173,7 @@ export default function DashboardPage() {
                 >
                   <header className="panel-content__header">
                     <div>
-                      <p className="eyebrow">Selected panel</p>
+                      <p className="eyebrow">当前分栏</p>
                       <h2>{selectedPanel.name}</h2>
                     </div>
                     <p className="panel-content__count">
@@ -194,8 +193,8 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <div className="state-card state-card--nested" data-testid="panel-empty" role="status">
-                      <h3>No monitors in this panel</h3>
-                      <p>This panel has no enabled monitors in the public snapshot.</p>
+                      <h3>该分栏暂无监控</h3>
+                      <p>该分栏中没有启用的监控。</p>
                     </div>
                   )}
                 </section>

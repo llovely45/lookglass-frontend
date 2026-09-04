@@ -13,7 +13,7 @@ export default function SortableList<T extends { id: string }>({
   getItemLabel,
   onMove,
   renderItem,
-  emptyMessage = "Nothing to show yet.",
+  emptyMessage = "暂无内容。",
 }: SortableListProps<T>) {
   const [movingId, setMovingId] = useState<string | null>(null);
 
@@ -41,12 +41,12 @@ export default function SortableList<T extends { id: string }>({
         return (
           <li className="sortable-list__item" key={item.id}>
             <div className="sortable-list__content">{renderItem(item, index)}</div>
-            <div className="sortable-list__controls" aria-label={`Order ${label}`}>
+            <div className="sortable-list__controls" aria-label={`排序：${label}`}>
               <button
                 className="icon-button"
                 type="button"
-                aria-label={`Move ${label} up`}
-                title={`Move ${label} up`}
+                aria-label={`上移 ${label}`}
+                title={`上移 ${label}`}
                 disabled={index === 0 || movingId !== null}
                 onClick={() => void move(item, index, index - 1)}
               >
@@ -55,14 +55,14 @@ export default function SortableList<T extends { id: string }>({
               <button
                 className="icon-button"
                 type="button"
-                aria-label={`Move ${label} down`}
-                title={`Move ${label} down`}
+                aria-label={`下移 ${label}`}
+                title={`下移 ${label}`}
                 disabled={index === items.length - 1 || movingId !== null}
                 onClick={() => void move(item, index, index + 1)}
               >
                 ↓
               </button>
-              {isMoving ? <span className="sr-only">Saving order…</span> : null}
+              {isMoving ? <span className="sr-only">正在保存排序…</span> : null}
             </div>
           </li>
         );

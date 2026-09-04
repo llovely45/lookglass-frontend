@@ -59,8 +59,8 @@ export default function PanelTabs({
   };
 
   return (
-    <nav className="panel-tabs" aria-label="Status panels">
-      <div className="panel-tab-list" role="tablist" aria-label="Status panels">
+    <nav className="panel-tabs" aria-label="状态分栏">
+      <div className="panel-tab-list" role="tablist" aria-label="状态分栏">
         {panels.map((panel) => {
           const isSelected = panel.id === selectedPanelId;
 
