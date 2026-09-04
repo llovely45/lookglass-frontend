@@ -118,7 +118,9 @@ describe("DashboardPage", () => {
     expect(screen.queryByText("TCPing")).not.toBeInTheDocument();
     expect(screen.queryByText("https://example.test/")).not.toBeInTheDocument();
     expect(screen.queryByText("HTTP GET 延迟")).not.toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /本地时间：/ })[0]).toBeInTheDocument();
+    const firstSample = screen.getAllByRole("button", { name: /本地时间：/ })[0];
+    expect(firstSample).toBeInTheDocument();
+    expect(firstSample).not.toHaveAttribute("title");
   });
 
   it("keeps the latest timestamp when samples share a bucket", () => {
