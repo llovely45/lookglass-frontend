@@ -18,6 +18,7 @@ interface MonitorFormProps {
 interface MonitorFormState {
   name: string;
   logoUrl: string;
+  linkUrl: string;
   kind: MonitorInput["kind"];
   target: string;
   port: string;
@@ -32,6 +33,7 @@ function formStateFromMonitor(
   return {
     name: monitor?.name ?? "",
     logoUrl: monitor?.logo_url ?? "",
+    linkUrl: monitor?.link_url ?? "",
     kind: monitor?.kind ?? "http_get",
     target: monitor?.target ?? "",
     port: monitor?.port === null || monitor?.port === undefined ? "" : String(monitor.port),
@@ -115,6 +117,12 @@ export default function MonitorForm({
       return;
     }
 
+    const linkUrl = form.linkUrl.trim();
+    if (linkUrl && !isHttpTarget(linkUrl)) {
+      setError("跳转链接必须使用 http 或 https");
+      return;
+    }
+
     const sortOrder = Number(form.sortOrder);
     if (!Number.isSafeInteger(sortOrder)) {
       setError("排序必须是整数");
@@ -151,6 +159,7 @@ export default function MonitorForm({
       panel_id: panelId,
       name,
       logo_url: logoUrl || null,
+      link_url: linkUrl || null,
       kind: form.kind,
       target,
       port,
@@ -219,6 +228,20 @@ export default function MonitorForm({
             value={form.logoUrl}
             onChange={(event) =>
               setForm((current) => ({ ...current, logoUrl: event.target.value }))
+            }
+          />
+        </label>
+
+        <label className="form-field form-field--wide">
+          <span>跳转链接</span>
+          <input
+            autoComplete="url"
+            name="link_url"
+            placeholder="https://example.com/"
+            type="url"
+            value={form.linkUrl}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, linkUrl: event.target.value }))
             }
           />
         </label>

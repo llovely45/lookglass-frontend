@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 import { normalizeSamples } from "../components/SampleGrid";
 import type { StatusSnapshot } from "../contracts";
+import { DISPLAY_MODE_STORAGE_KEY } from "../lib/displayMode";
 
 vi.mock("../lib/statusApi", async () => {
   const actual = await vi.importActual<typeof import("../lib/statusApi")>(
@@ -40,6 +41,7 @@ function dashboardFixture(): StatusSnapshot {
             id: "monitor-http",
             name: "Homepage",
             logoUrl: null,
+            linkUrl: "https://www.example.com/",
             kind: "http_get",
             target: "https://example.test/",
             samples: [{ t: generatedAt, s: "ok", v: 420, code: 200 }],
@@ -55,6 +57,7 @@ function dashboardFixture(): StatusSnapshot {
             id: "monitor-tcp",
             name: "Database port",
             logoUrl: null,
+            linkUrl: null,
             kind: "tcping",
             target: "db.example.test:5432",
             samples: [{ t: generatedAt, s: "ok", v: 42 }],
@@ -69,6 +72,7 @@ describe("DashboardPage", () => {
   let fetchRequests: Array<readonly unknown[]>;
 
   beforeEach(() => {
+    window.localStorage.removeItem(DISPLAY_MODE_STORAGE_KEY);
     loadStatusSnapshotMock.mockResolvedValue(dashboardFixture());
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")
@@ -77,7 +81,49 @@ describe("DashboardPage", () => {
   });
 
   afterEach(() => {
+    window.localStorage.removeItem(DISPLAY_MODE_STORAGE_KEY);
     vi.restoreAllMocks();
+  });
+
+  it("switches to NAV mode with links only on configured sites", async () => {
+    const user = userEvent.setup();
+
+    render(<DashboardPage />);
+
+    expect(await screen.findByRole("button", { name: "LG" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getAllByTestId("sample-cell")).toHaveLength(48);
+
+    await user.click(screen.getByRole("button", { name: "NAV" }));
+
+    expect(screen.getByRole("button", { name: "NAV" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.queryByTestId("sample-cell")).not.toBeInTheDocument();
+    expect(screen.queryByText("最近 24 小时")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Homepage" })).toHaveAttribute(
+      "href",
+      "https://www.example.com/",
+    );
+    expect(
+      screen.queryByRole("link", { name: "Database port" }),
+    ).not.toBeInTheDocument();
+    expect(window.localStorage.getItem(DISPLAY_MODE_STORAGE_KEY)).toBe("nav");
+  });
+
+  it("restores the persisted display mode on a later render", async () => {
+    window.localStorage.setItem(DISPLAY_MODE_STORAGE_KEY, "nav");
+
+    render(<DashboardPage />);
+
+    expect(await screen.findByRole("button", { name: "NAV" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.queryByTestId("sample-cell")).not.toBeInTheDocument();
   });
 
   it("renders panel tabs and keeps tab changes on the R2-only path", async () => {

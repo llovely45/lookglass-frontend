@@ -37,6 +37,7 @@ const monitorInput = {
   kind: "http_get" as const,
   target: "https://example.test/health",
   port: null,
+  link_url: "https://www.example.com/",
   sort_order: 3,
   enabled: false,
 };

@@ -21,6 +21,7 @@ export interface StatusSnapshot {
       id: string;
       name: string;
       logoUrl: string | null;
+      linkUrl: string | null;
       kind: MonitorKind;
       target: string;
       samples: StatusSample[];

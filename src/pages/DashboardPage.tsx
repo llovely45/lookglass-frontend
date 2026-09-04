@@ -2,6 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { StatusSnapshot } from "../contracts";
 import { SITE_TITLE } from "../env";
+import {
+  readDisplayMode,
+  writeDisplayMode,
+  type DisplayMode,
+} from "../lib/displayMode";
 import { isSnapshotStale, loadStatusSnapshot } from "../lib/statusApi";
 import MonitorCard from "../components/MonitorCard";
 import PanelTabs, {
@@ -21,6 +26,9 @@ function errorMessage(error: unknown): string {
 
 export default function DashboardPage() {
   const [snapshot, setSnapshot] = useState<StatusSnapshot | null>(null);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>(() =>
+    readDisplayMode(),
+  );
   const [selectedPanelId, setSelectedPanelId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,8 +93,15 @@ export default function DashboardPage() {
   const siteTitle = SITE_TITLE?.trim() || "Lookglass";
   const snapshotIsStale = snapshot ? isSnapshotStale(snapshot) : false;
 
+  function selectDisplayMode(nextMode: DisplayMode): void {
+    setDisplayMode(nextMode);
+    writeDisplayMode(nextMode);
+  }
+
   return (
-    <main className="dashboard-shell dashboard-shell--public">
+    <main
+      className={`dashboard-shell dashboard-shell--public dashboard-shell--${displayMode}`}
+    >
       <div className="page-container page-container--public">
         <header className="dashboard-header dashboard-header--public">
           <div className="dashboard-header__main">
@@ -106,6 +121,25 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="dashboard-header__side">
+            <div className="display-mode-switch" role="group" aria-label="显示模式">
+              <span className="display-mode-switch__label">显示模式</span>
+              <button
+                className={`display-mode-switch__button${displayMode === "lg" ? " display-mode-switch__button--selected" : ""}`}
+                type="button"
+                aria-pressed={displayMode === "lg"}
+                onClick={() => selectDisplayMode("lg")}
+              >
+                LG
+              </button>
+              <button
+                className={`display-mode-switch__button${displayMode === "nav" ? " display-mode-switch__button--selected" : ""}`}
+                type="button"
+                aria-pressed={displayMode === "nav"}
+                onClick={() => selectDisplayMode("nav")}
+              >
+                NAV
+              </button>
+            </div>
             <div
               className={`live-status${snapshotIsStale ? " live-status--stale" : ""}`}
               role="status"
@@ -187,15 +221,17 @@ export default function DashboardPage() {
                   aria-labelledby={panelTabId(selectedPanel.id)}
                   tabIndex={0}
                 >
-                  <header className="panel-content__header">
-                    <div>
-                      <p className="eyebrow">状态概览</p>
-                      <h2>{selectedPanel.name}</h2>
-                    </div>
-                    <p className="panel-content__count">
-                      {selectedPanel.monitors.length} 项服务
-                    </p>
-                  </header>
+                  {displayMode === "lg" ? (
+                    <header className="panel-content__header">
+                      <div>
+                        <p className="eyebrow">状态概览</p>
+                        <h2>{selectedPanel.name}</h2>
+                      </div>
+                      <p className="panel-content__count">
+                        {selectedPanel.monitors.length} 项服务
+                      </p>
+                    </header>
+                  ) : null}
 
                   {selectedPanel.monitors.length > 0 ? (
                     <div className="monitor-list">
@@ -204,6 +240,7 @@ export default function DashboardPage() {
                           key={monitor.id}
                           monitor={monitor}
                           snapshotGeneratedAt={snapshot.generatedAt}
+                          displayMode={displayMode}
                         />
                       ))}
                     </div>

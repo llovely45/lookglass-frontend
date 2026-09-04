@@ -57,6 +57,7 @@ const monitor = {
   panel_id: "panel-1",
   name: "Homepage",
   logo_url: null,
+  link_url: null,
   kind: "http_get" as const,
   target: "https://example.test/health",
   port: null,
@@ -140,6 +141,37 @@ describe("admin UI", () => {
     expect(screen.getByLabelText("主机/IP")).toBeInTheDocument();
     expect(screen.getByLabelText("端口")).toBeInTheDocument();
     expect(screen.queryByLabelText("URL")).not.toBeInTheDocument();
+  });
+
+  it("submits an optional navigation link with a monitor", async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+
+    render(
+      <MonitorForm
+        panelId="panel-1"
+        defaultSortOrder={0}
+        onSaved={onSaved}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("名称"), "Homepage");
+    await user.type(screen.getByLabelText("URL"), "https://example.com/health");
+    await user.type(
+      screen.getByLabelText("跳转链接"),
+      "https://www.example.com/",
+    );
+    await user.click(screen.getByRole("button", { name: "保存监控" }));
+
+    await waitFor(() =>
+      expect(saveMonitorMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          panel_id: "panel-1",
+          link_url: "https://www.example.com/",
+        }),
+        undefined,
+      ),
+    );
   });
 
   it("renders the administration page copy in Chinese", async () => {

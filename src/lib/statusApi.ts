@@ -60,6 +60,35 @@ function stringOrNullAt(value: unknown, path: string): string | null {
   return value;
 }
 
+function navigationUrlAt(value: unknown, path: string): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  const linkUrl = stringOrNullAt(value, path);
+  if (linkUrl === null) {
+    return null;
+  }
+
+  let url: URL;
+  try {
+    url = new URL(linkUrl);
+  } catch {
+    invalid(path, "must be an absolute HTTP or HTTPS URL");
+  }
+
+  if (
+    (url.protocol !== "http:" && url.protocol !== "https:") ||
+    url.hostname.length === 0 ||
+    url.username.length > 0 ||
+    url.password.length > 0
+  ) {
+    invalid(path, "must be an absolute HTTP or HTTPS URL without credentials");
+  }
+
+  return linkUrl;
+}
+
 function unixSecondsAt(value: unknown, path: string): number {
   if (
     typeof value !== "number" ||
@@ -150,6 +179,7 @@ function validateSnapshotShape(value: unknown): StatusSnapshot {
 
       nonEmptyStringAt(monitor.name, `${monitorPath}.name`);
       stringOrNullAt(monitor.logoUrl, `${monitorPath}.logoUrl`);
+      navigationUrlAt(monitor.linkUrl, `${monitorPath}.linkUrl`);
       if (
         typeof monitor.kind !== "string" ||
         !MONITOR_KINDS.includes(monitor.kind as MonitorKind)

@@ -1,4 +1,5 @@
 import type { StatusSnapshot } from "../contracts";
+import type { DisplayMode } from "../lib/displayMode";
 import SampleGrid from "./SampleGrid";
 
 export type DashboardMonitor =
@@ -7,6 +8,7 @@ export type DashboardMonitor =
 interface MonitorCardProps {
   monitor: DashboardMonitor;
   snapshotGeneratedAt: number;
+  displayMode?: DisplayMode;
 }
 
 type MonitorHealthTone = "ok" | "issue" | "unknown";
@@ -42,8 +44,39 @@ function getMonitorHealth(monitor: DashboardMonitor): MonitorHealth {
 export default function MonitorCard({
   monitor,
   snapshotGeneratedAt,
+  displayMode = "lg",
 }: MonitorCardProps) {
   const health = getMonitorHealth(monitor);
+
+  if (displayMode === "nav") {
+    const identity = (
+      <div className="monitor-card__nav-identity">
+        {monitor.logoUrl ? (
+          <img className="monitor-card__logo" src={monitor.logoUrl} alt="" />
+        ) : (
+          <span className="monitor-card__mark" aria-hidden="true">
+            {monitor.name.charAt(0).toUpperCase()}
+          </span>
+        )}
+        <span className="monitor-card__nav-name">{monitor.name}</span>
+      </div>
+    );
+
+    return (
+      <article
+        className="monitor-card monitor-card--nav"
+        data-testid="monitor-card"
+      >
+        {monitor.linkUrl ? (
+          <a className="monitor-card__nav-link" href={monitor.linkUrl}>
+            {identity}
+          </a>
+        ) : (
+          identity
+        )}
+      </article>
+    );
+  }
 
   return (
     <article

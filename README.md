@@ -46,6 +46,18 @@ npm run build
 The build output is static files only. It includes `public/_redirects` for
 the SPA fallback and `public/_headers` for the Pages security headers.
 
+## Public display modes
+
+The public dashboard has an `LG` mode and a `NAV` mode switch in the upper
+right. `LG` shows the monitoring status cards and half-hour status cells;
+`NAV` shows only each monitor's Logo and name. A monitor is clickable in NAV
+mode only when the Worker configuration supplies a `link_url`; monitors
+without one remain non-clickable.
+
+The selected mode is stored in the browser under
+`lookglass-display-mode` and restored on the next visit. Storage errors do not
+prevent the current page from switching modes.
+
 ## Cloudflare Pages deployment
 
 Authenticate Wrangler with the Cloudflare account that owns the Pages

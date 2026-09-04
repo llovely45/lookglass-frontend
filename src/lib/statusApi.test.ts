@@ -26,6 +26,7 @@ function validSnapshot(): StatusSnapshot {
             id: "monitor-1",
             name: "Homepage",
             logoUrl: null,
+            linkUrl: null,
             kind: "http_get",
             target: "https://example.test/health",
             samples: [{ t: GENERATED_AT, s: "ok", v: 420, code: 200 }],
@@ -129,6 +130,12 @@ describe("loadStatusSnapshot", () => {
       "HTTP code",
       (snapshot: Record<string, any>): void => {
         snapshot.panels[0].monitors[0].samples[0].code = "200";
+      },
+    ],
+    [
+      "navigation link",
+      (snapshot: Record<string, any>): void => {
+        snapshot.panels[0].monitors[0].linkUrl = "javascript:alert(1)";
       },
     ],
   ] as const)("rejects an invalid %s", async (_name, mutate) => {
