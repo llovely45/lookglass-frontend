@@ -1,0 +1,55 @@
+name: CI and deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Validate production build variables
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          VITE_STATUS_URL: ${{ vars.VITE_STATUS_URL }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: |
+          test -n "$VITE_STATUS_URL"
+          test -n "$VITE_API_BASE_URL"
+
+      - name: Build static Pages assets
+        env:
+          VITE_STATUS_URL: ${{ vars.VITE_STATUS_URL }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: npm run build
+
+      - name: Deploy static Pages assets
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name lookglass-frontend
